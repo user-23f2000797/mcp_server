@@ -1,17 +1,22 @@
 import hashlib
-from fastmcp import FastMCP
+from fastmcp import FastMCP, Context
 
-EMAIL = "23f2000797@ds.study.iitm.ac.in"
+EMAIL = "23f2000797@ds.study.iitm.ac.in".strip().lower()
 
 mcp = FastMCP("exam-server")
 
+
 @mcp.tool
-def solve_challenge() -> str:
-    headers = mcp.request_context.headers
-    challenge = headers.get("x-exam-challenge", "")
+def solve_challenge(ctx: Context) -> str:
+    challenge = ctx.request.headers.get("x-exam-challenge")
+
+    if challenge is None:
+        raise ValueError("Missing X-Exam-Challenge header")
+
     return hashlib.sha256(
-        f"{challenge}:{EMAIL}".encode()
+        f"{challenge}:{EMAIL}".encode("utf-8")
     ).hexdigest()[:16]
+
 
 if __name__ == "__main__":
     mcp.run(
@@ -19,4 +24,3 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8000,
     )
-
