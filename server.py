@@ -1,28 +1,22 @@
 import hashlib
-
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 EMAIL = "23f2000797@ds.study.iitm.ac.in"
 
 mcp = FastMCP("exam-server")
 
-
-@mcp.tool()
+@mcp.tool
 def solve_challenge() -> str:
-    """
-    Returns the first 16 hex chars of
-    SHA256(challenge:normalized_email)
-    """
-
     headers = mcp.request_context.headers
-
     challenge = headers.get("x-exam-challenge", "")
-
-    digest = hashlib.sha256(
+    return hashlib.sha256(
         f"{challenge}:{EMAIL}".encode()
-    ).hexdigest()
+    ).hexdigest()[:16]
 
-    return digest[:16]
+if __name__ == "__main__":
+    mcp.run(
+        transport="streamable-http",
+        host="0.0.0.0",
+        port=8000,
+    )
 
-
-app = mcp.streamable_http_app()
